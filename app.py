@@ -54,6 +54,10 @@ st.markdown("""
             margin-top: 2px;
             font-weight: 500;
         }
+        /* Force standard table row text visibility overrides */
+        table {
+            color: #e4e7eb !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,7 +72,6 @@ st.markdown("---")
 st.sidebar.header("🎯 Operational Performance Drivers")
 st.sidebar.write("Calibrate underlying metrics to drive top-line growth:")
 
-# RFP Pipeline Drivers to replace the lone revenue slider
 rfp_count = st.sidebar.slider(
     "Annual RFPs Submitted (2026–2027)", 
     min_value=100, max_value=500, value=280, step=5
@@ -96,17 +99,16 @@ ga_efficiency_pct = st.sidebar.slider(
 raw_revenue_2024 = 62500000.0
 raw_revenue_2025 = 72393163.75
 
-# Spreadsheet Business Logic: Contracts Signed = RFPs Submitted * Win Rate
-# Hardcoded standard deal value structure from data model context handles the projection values
+# Pipeline Logic: Contracts Signed = RFPs Submitted * Win Rate
 contracts_signed = rfp_count * win_rate
-assumed_deal_size_2026 = 1010000.0   # Baseline proxy scaling unit
+assumed_deal_size_2026 = 1010000.0   
 assumed_deal_size_2027 = 1100000.0
 
 # Calculate top-line performance dynamically based on RFP inputs
 rev_2026_projected = contracts_signed * assumed_deal_size_2026
 rev_2027_projected = contracts_signed * assumed_deal_size_2027
 
-# Back-calculate implied Revenue CAGR to maintain underlying model dynamics
+# Back-calculate implied Revenue CAGR to maintain underlying model parameters
 implied_cagr = ((rev_2027_projected / raw_revenue_2025) ** (1/2)) - 1
 
 # Define structural margins to calibrate optimization parameters
@@ -204,7 +206,7 @@ with m_col3:
 st.markdown("---")
 
 # ==============================================================================
-# 4. VERTICAL INCOME STATEMENT PRESENTATION LEDGER
+# 4. VERTICAL INCOME STATEMENT Presentation LEDGER (FIXED FOR TOTAL REVENUE)
 # ==============================================================================
 st.write("### 📑 Income Statement Presentation Ledger ($ Millions)")
 
@@ -238,7 +240,9 @@ def apply_institutional_formatting(styler):
     return styler
 
 df_styled_pnl = df_pnl_report.style.pipe(apply_institutional_formatting)
-st.dataframe(df_styled_pnl, use_container_width=True)
+
+# CHANGED: Rendered via st.table instead of st.dataframe to eliminate row-clipping layout bugs
+st.table(df_styled_pnl)
 
 st.write("")
 st.info(
