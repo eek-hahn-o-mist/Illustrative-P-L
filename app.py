@@ -59,20 +59,27 @@ st.markdown("""
 
 # Main Application Headers
 st.title("📊 Financial Performance Reporting Suite")
-st.subheader("Illustrative Income Statement & Variance Sensitivity Model")
+st.subheader("Illustrative Income Statement & Business Driver Sensitivity Model")
 st.markdown("---")
 
 # ==============================================================================
-# 1. SIDEBAR STRATEGIC OVERLAYS
+# 1. SIDEBAR OPERATIONAL DRIVERS & SENSITIVITY SLIDERS
 # ==============================================================================
-st.sidebar.header("🎯 Operational Parameters")
-st.sidebar.write("Calibrate future performance target assumptions:")
+st.sidebar.header("🎯 Operational Performance Drivers")
+st.sidebar.write("Calibrate underlying metrics to drive top-line growth:")
 
-rev_cagr = st.sidebar.slider(
-    "Target Revenue Growth (CAGR %)", 
-    min_value=0.0, max_value=30.0, value=14.0, step=0.5
+# RFP Pipeline Drivers to replace the lone revenue slider
+rfp_count = st.sidebar.slider(
+    "Annual RFPs Submitted (2026–2027)", 
+    min_value=100, max_value=500, value=280, step=5
+)
+win_rate = st.sidebar.slider(
+    "RFP Win Rate (% Won)", 
+    min_value=10.0, max_value=60.0, value=29.5, step=0.5
 ) / 100
 
+st.sidebar.markdown("---")
+st.sidebar.subheader("Margin & Cost Efficiencies")
 gm_expansion = st.sidebar.slider(
     "Gross Margin Efficiency Target (%)", 
     min_value=0.0, max_value=10.0, value=2.5, step=0.5
@@ -84,23 +91,32 @@ ga_efficiency_pct = st.sidebar.slider(
 ) / 100
 
 # ==============================================================================
-# 2. DATA EXTRACTION & ENGINE FORECAST PIPELINE
+# 2. OPERATIONAL FORECAST ENGINE (REVENUE DRIVEN BY PIPELINE MIX)
 # ==============================================================================
 raw_revenue_2024 = 62500000.0
 raw_revenue_2025 = 72393163.75
 
-# Compound top-line targets forward sequentially across the horizon
-rev_2026_projected = raw_revenue_2025 * (1.0 + rev_cagr)
-rev_2027_projected = rev_2026_projected * (1.0 + rev_cagr)
+# Spreadsheet Business Logic: Contracts Signed = RFPs Submitted * Win Rate
+# Hardcoded standard deal value structure from data model context handles the projection values
+contracts_signed = rfp_count * win_rate
+assumed_deal_size_2026 = 1010000.0   # Baseline proxy scaling unit
+assumed_deal_size_2027 = 1100000.0
 
-# Define baseline margins to calibrate optimization parameters
+# Calculate top-line performance dynamically based on RFP inputs
+rev_2026_projected = contracts_signed * assumed_deal_size_2026
+rev_2027_projected = contracts_signed * assumed_deal_size_2027
+
+# Back-calculate implied Revenue CAGR to maintain underlying model dynamics
+implied_cagr = ((rev_2027_projected / raw_revenue_2025) ** (1/2)) - 1
+
+# Define structural margins to calibrate optimization parameters
 base_margin_2025 = 25724172.75 / raw_revenue_2025
 projected_margin_target = min(base_margin_2025 + gm_expansion, 0.85)
 
-# Sales & Marketing Cost Containment Logic
+# Sales & Marketing Expense scaling anchored to the operational revenue outcome
 sm_base_2025 = -12124172.75
-sm_2026_projected = sm_base_2025 * (1.0 + (rev_cagr * 0.40)) * 0.85
-sm_2027_projected = sm_2026_projected * (1.0 + (rev_cagr * 0.40)) * 0.85
+sm_2026_projected = sm_base_2025 * (1.0 + (implied_cagr * 0.40)) * 0.85
+sm_2027_projected = sm_base_2025 * (1.0 + (implied_cagr * 0.40)) * 0.85
 
 # Product engineering maintenance metrics
 pe_base_2025 = -2324172.75
@@ -163,7 +179,7 @@ with m_col1:
         <div class="executive-card">
             <div class="card-title">2027 Projected Net Revenue</div>
             <div class="card-value">${col_2027_proj[0]/1e6:.2f}M</div>
-            <div class="card-subtitle" style="color: #60a5fa;">Multi-Horizon Compounded Projections</div>
+            <div class="card-subtitle" style="color: #60a5fa;">Contracts Signed: {contracts_signed:.1f}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -179,20 +195,19 @@ with m_col2:
 with m_col3:
     st.markdown(f"""
         <div class="executive-card">
-            <div class="card-title">2027 Projected EBITDA</div>
-            <div class="card-value">${col_2027_proj[7]/1e6:.2f}M</div>
-            <div class="card-subtitle" style="color: #60a5fa;">Annualized Run-Rate Operating Cash Flow</div>
+            <div class="card-title">Implied Revenue CAGR</div>
+            <div class="card-value">{implied_cagr*100:.1f}%</div>
+            <div class="card-subtitle" style="color: #60a5fa;">Pipeline-to-Growth Translation Rate</div>
         </div>
     """, unsafe_allow_html=True)
 
 st.markdown("---")
 
 # ==============================================================================
-# 4. VERTICAL INCOME STATEMENT Presentation LEDGER
+# 4. VERTICAL INCOME STATEMENT PRESENTATION LEDGER
 # ==============================================================================
 st.write("### 📑 Income Statement Presentation Ledger ($ Millions)")
 
-# Core accounting formatting logic (enforces parentheses on negative entries)
 def currency_formatter(val):
     if isinstance(val, (int, float)):
         if val < 0:
@@ -200,7 +215,6 @@ def currency_formatter(val):
         return f"${val/1e6:.2f}M"
     return val
 
-# Advanced Pandas Styler layout configuration to mimic phData styling
 def apply_institutional_formatting(styler):
     columns_to_format = [col for col in styler.columns if col != "Financial Line Item"]
     styler.format(currency_formatter, subset=columns_to_format)
@@ -209,7 +223,7 @@ def apply_institutional_formatting(styler):
     styler.set_properties(subset=columns_to_format, **{'text-align': 'right'})
     styler.set_properties(subset=["Financial Line Item"], **{'text-align': 'left'})
     
-    # Bold primary subtotal metrics (Rows index 0: Revenue, 2: GP, 6: Opex, 7: EBITDA)
+    # Bold primary subtotal metrics
     styler.set_properties(subset=pd.IndexSlice[[0, 2, 6, 7], :], **{
         'font-weight': 'bold',
         'color': '#ffffff'
@@ -228,9 +242,9 @@ st.dataframe(df_styled_pnl, use_container_width=True)
 
 st.write("")
 st.info(
-    "**Financial Model Rationale:** Following the structural formatting rules of institutional statement presentation, "
-    "this ledger evaluates forecast variance tracking. Adjusting the top-line scaling parameters and administrative efficiency "
-    "levers outputs an updated run rate while protecting the strict **15% minimum EBITDA margin target floor**."
+    "**Financial Model Rationale:** Following institutional statement formatting rules, this ledger models forecast variance "
+    "driven from direct operational funnel metrics. Shifting the RFP volume and win percentage updates the top-line automatically, "
+    "while opex layers respect the strict **15% minimum EBITDA margin target floor**."
 )
 
 st.markdown("---")
