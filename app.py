@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # ==============================================================================
-# CSS INJECTION: INSTITUTIONAL CORPORATE PALETTE
+# CSS INJECTION: INSTITUTIONAL CORPORATE PALETTE & METRIC CARDS
 # ==============================================================================
 st.markdown("""
     <style>
@@ -86,7 +86,6 @@ ga_synergy_pct = st.sidebar.slider(
 # ==============================================================================
 # 2. DATA EXTRACTION & ENGINE FORECAST PIPELINE
 # ==============================================================================
-# Base Case values extracted from original spreadsheet records
 raw_revenue_2024 = 62500000.0
 raw_revenue_2025 = 72393163.75
 
@@ -103,8 +102,7 @@ base_margin_2024 = 21093750.0 / raw_revenue_2024
 base_margin_2025 = 25724172.75 / raw_revenue_2025
 proforma_margin_target = min(base_margin_2025 + gm_expansion, 0.85)
 
-# --- MARKETING OVERHEAD CONTRACTION LOGIC ---
-# Standard variable marketing options scale down post-acquisition to simulate scale efficiencies
+# Marketing Overhead Contraction Logic
 sm_base_2025 = -12124172.75
 sm_2026_proforma = sm_base_2025 * (1.0 + (rev_cagr * 0.40)) * 0.85
 sm_2027_proforma = sm_2026_proforma * (1.0 + (rev_cagr * 0.40)) * 0.85
@@ -117,7 +115,7 @@ pe_base_2025 = -2324172.75
 pe_2026_proforma, pe_2027_proforma = pe_base_2025 * 1.02, pe_base_2025 * 1.0404
 pe_2026_standalone, pe_2027_standalone = pe_base_2025 * 1.03, pe_base_2025 * 1.0609
 
-# G&A rationalization cost savings applied
+# G&A cost savings applied
 ga_base_2025 = -5724172.75
 ga_2026_proforma = (ga_base_2025 * 1.02) * (1.0 - ga_synergy_pct)
 ga_2027_proforma = (ga_2026_proforma * 1.02) * (1.0 - ga_synergy_pct)
@@ -125,7 +123,7 @@ ga_2027_proforma = (ga_2026_proforma * 1.02) * (1.0 - ga_synergy_pct)
 ga_2026_standalone = ga_base_2025 * 1.02
 ga_2027_standalone = ga_2026_standalone * 1.0404
 
-# --- EBITDA PROTECTION ENGINE (15% STRICT MINIMUM CEILING) ---
+# EBITDA Margin Protection Engine (15% Floor)
 target_ebitda_floor = 0.15
 
 def calculate_pnl_column(rev, gm_pct, sm, ga, pe, apply_floor=False):
@@ -143,7 +141,6 @@ def calculate_pnl_column(rev, gm_pct, sm, ga, pe, apply_floor=False):
         
     return [rev, cogs, gp, sm, ga, pe, opex, ebitda]
 
-# Construct corporate timeline models sequentially
 col_2024 = [62500000.0, -41406250.0, 21093750.0, -10546875.0, -5273437.5, -2109375.0, -17929687.5, 3164062.5]
 col_2025 = [72393163.75, -46668991.0, 25724172.75, -12124172.75, -5724172.75, -2324172.75, -20172472.75, 5551700.0]
 
@@ -153,7 +150,6 @@ col_2027_sa = calculate_pnl_column(rev_2027_standalone, base_margin_2025, sm_202
 col_2026_pf = calculate_pnl_column(rev_2026_proforma, proforma_margin_target, sm_2026_proforma, ga_2026_proforma, pe_2026_proforma, apply_floor=True)
 col_2027_pf = calculate_pnl_column(rev_2027_proforma, proforma_margin_target, sm_2027_proforma, ga_2027_proforma, pe_2027_proforma, apply_floor=True)
 
-# Build unified visual ledger array structure
 pnl_report_structure = {
     "Financial Line Item": [
         "Total Revenue", "  ( - ) Cost of Goods Sold", "Gross Profit",
@@ -170,7 +166,7 @@ pnl_report_structure = {
 df_pnl_report = pd.DataFrame(pnl_report_structure)
 
 # ==============================================================================
-# 3. HORIZONTAL METRICS BLOCK (TABLEAU INSPIRED DESIGN OVERVIEW)
+# 3. HORIZONTAL METRICS SUMMARY CARD GENERATION
 # ==============================================================================
 ebitda_margin_2025_base = (col_2025[7] / col_2025[0]) * 100
 ebitda_margin_2027_proforma = (col_2027_pf[7] / col_2027_pf[0]) * 100
@@ -207,7 +203,7 @@ with m_col3:
     """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. RUN RATE VECTOR LINE ANALYSIS
+# 4. OPERATIONAL RUN RATE VECTOR ANALYSIS
 # ==============================================================================
 st.write("### 📈 Operational Run Rate Vectors")
 
@@ -230,31 +226,4 @@ st.plotly_chart(fig_trends, use_container_width=True)
 st.markdown("---")
 
 # ==============================================================================
-# 5. VERTICAL INCOME STATEMENT VARIANCE LEDGER (THE PHDATA MATRIX VIEW)
-# ==============================================================================
-st.write("### 📑 Executive Pro Forma Statement & Variance Ledger ($ Millions)")
-
-def format_institutional_pnl(val):
-    if isinstance(val, (int, float)):
-        if val < 0:
-            return f"(${abs(val)/1e6:.2f}M)"
-        return f"${val/1e6:.2f}M"
-    return val
-
-# Standardized structured layout rendering formatting parameters across blocks
-df_formatted_pnl = df_pnl_report.copy()
-for col in df_formatted_pnl.columns:
-    if col != "Financial Line Item":
-        df_formatted_pnl[col] = df_formatted_pnl[col].apply(format_institutional_pnl)
-
-# Draw structured matrix table full width
-st.dataframe(df_formatted_pnl, use_container_width=True, hide_index=True)
-
-st.write("")
-
-# Investment Thesis Summary Box
-st.info(
-    f"**Corporate Finance Model Rationale:** Following the structural rules of executive statement presentation, "
-    f"this layout highlights the operational variance generated post-merger. Adjusting the growth and overhead reduction dials "
-    f"shows a clear trajectory where bottom-line earnings expand while protecting the strict **15% minimum EBITDA floor constraints**."
-)
+# 5. HIGH
