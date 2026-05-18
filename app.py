@@ -193,3 +193,68 @@ with m_col2:
         <div class="executive-card">
             <div class="card-title">2027 Target EBITDA Margin</div>
             <div class="card-value">{ebitda_margin_2027_proforma:.1f}%</div>
+            <div class="card-subtitle">▲ +{margin_variance:.1f}% Expansion Over Standalone</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m_col3:
+    st.markdown(f"""
+        <div class="executive-card">
+            <div class="card-title">Annualized G&A Savings Captured</div>
+            <div class="card-value">${total_opex_savings/1e3:,.1f}K</div>
+            <div class="card-subtitle">▲ Back-Office Overlap Efficiencies</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==============================================================================
+# 4. RUN RATE VECTOR LINE ANALYSIS
+# ==============================================================================
+st.write("### 📈 Operational Run Rate Vectors")
+
+df_melted = df_pnl_report.set_index("Financial Line Item").T.reset_index().rename(columns={"index": "Reporting Period"})
+df_melted["EBITDA"] = pd.to_numeric(df_melted["EBITDA"])
+df_melted["Gross Profit"] = pd.to_numeric(df_melted["Gross Profit"])
+df_melted["Total Revenue"] = pd.to_numeric(df_melted["Total Revenue"])
+
+fig_trends = px.line(
+    df_melted, x="Reporting Period", y=["Total Revenue", "Gross Profit", "EBITDA"],
+    markers=True, color_discrete_sequence=["#60a5fa", "#34d399", "#f87171"]
+)
+fig_trends.update_layout(
+    template="plotly_dark", paper_bgcolor="#0b0f19", plot_bgcolor="#111827",
+    legend_title_text="", margin={"r":15,"t":15,"l":15,"b":15},
+    xaxis={"gridcolor": "#1f2937"}, yaxis={"gridcolor": "#1f2937"}
+)
+st.plotly_chart(fig_trends, use_container_width=True)
+
+st.markdown("---")
+
+# ==============================================================================
+# 5. VERTICAL INCOME STATEMENT VARIANCE LEDGER (THE PHDATA MATRIX VIEW)
+# ==============================================================================
+st.write("### 📑 Executive Pro Forma Statement & Variance Ledger ($ Millions)")
+
+def format_institutional_pnl(val):
+    if isinstance(val, (int, float)):
+        if val < 0:
+            return f"(${abs(val)/1e6:.2f}M)"
+        return f"${val/1e6:.2f}M"
+    return val
+
+# Standardized structured layout rendering formatting parameters across blocks
+df_formatted_pnl = df_pnl_report.copy()
+for col in df_formatted_pnl.columns:
+    if col != "Financial Line Item":
+        df_formatted_pnl[col] = df_formatted_pnl[col].apply(format_institutional_pnl)
+
+# Draw structured matrix table full width
+st.dataframe(df_formatted_pnl, use_container_width=True, hide_index=True)
+
+st.write("")
+
+# Investment Thesis Summary Box
+st.info(
+    f"**Corporate Finance Model Rationale:** Following the structural rules of executive statement presentation, "
+    f"this layout highlights the operational variance generated post-merger. Adjusting the growth and overhead reduction dials "
+    f"shows a clear trajectory where bottom-line earnings expand while protecting the strict **15% minimum EBITDA floor constraints**."
+)
