@@ -3,210 +3,219 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-# Page configuration for professional full-width enterprise dashboard layout
+# Page configuration for absolute control over layout
 st.set_page_config(
-    page_title="Corpay Corp Dev - M&A Target Simulator",
+    page_title="Executive Pro Forma Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-st.title("📈 Strategic M&A Target P&L Simulator")
-st.subheader("Professional Services Acquisition Analysis & Pro Forma Synergy Overlay")
-st.write(
-    "This interactive dashboard benchmarks the historical financial records of an illustrative "
-    "Professional Services target asset against dynamic growth assumptions, cross-sell revenue "
-    "acceleration parameters, and automated post-acquisition cost synergy realizations."
-)
+# ==============================================================================
+# CUSTOM BRANDING & DARK UI GRAPHICS (CSS INJECTION)
+# ==============================================================================
+st.markdown("""
+    <style>
+        /* Base dashboard canvas dark background override */
+        .stApp {
+            background-color: #0e1117;
+            color: #ffffff;
+        }
+        /* Style sidebar to match dark palette seamlessly */
+        [data-testid="stSidebar"] {
+            background-color: #161b22;
+            border-right: 1px solid #21262d;
+        }
+        /* Custom Key Metric Card container modules */
+        .metric-card {
+            background-color: #1f242d;
+            border: 1px solid #2d333b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        .metric-value {
+            font-size: 1.85rem;
+            color: #58a6ff;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        .metric-delta {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .delta-positive { color: #3fb950; }
+        .delta-negative { color: #f85149; }
+    </style>
+""", unsafe_allow_html=True)
 
+# Main Title Framework
+st.title("📊 Executive Financial Performance Dashboard")
+st.subheader("M&A Target Pro Forma Sensitivity Engine")
 st.markdown("---")
 
 # ==============================================================================
-# 1. SIDEBAR VALUE CREATION & UNIT ECONOMIC CONTROLS
+# 1. SIDEBAR CONTROLS
 # ==============================================================================
-st.sidebar.header("🎯 Value Creation Sliders")
-st.sidebar.write("Adjust target performance drivers to stress-test pro forma outputs.")
+st.sidebar.header("🎯 Operational Levers")
+st.sidebar.write("Calibrate post-acquisition performance assumptions:")
 
-st.sidebar.subheader("Top-Line Assumptions")
-# Extracted Baseline CAGR from file was ~14.05%
 rev_cagr = st.sidebar.slider(
-    "Pro Forma Revenue Growth (2026-2027 CAGR %)", 
-    min_value=0.0, 
-    max_value=30.0, 
-    value=14.0, 
-    step=0.5
+    "Pro Forma Revenue CAGR % (26-27)", 
+    min_value=0.0, max_value=30.0, value=14.0, step=0.5
 ) / 100
 
-st.sidebar.subheader("Efficiency & Margin Levers")
 gm_expansion = st.sidebar.slider(
-    "Gross Margin Optimization Lever (%)", 
-    min_value=0.0, 
-    max_value=10.0, 
-    value=2.5, 
-    step=0.5
+    "Gross Margin Optimization Expansion %", 
+    min_value=0.0, max_value=10.0, value=2.5, step=0.5
 ) / 100
 
-st.sidebar.subheader("Operational Synergies")
 ga_synergy_pct = st.sidebar.slider(
-    "G&A Overlap Cost Synergy Capture (%)", 
-    min_value=0.0, 
-    max_value=50.0, 
-    value=20.0, 
-    step=1.0
-) / 100
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("Corpay Portfolio Overlays")
-# Standard net take rate overlay from Corpay corporate payments segment strategy
-take_rate = st.sidebar.number_input(
-    "Assumed Automated Payment Take Rate (%)", 
-    value=0.62, 
-    step=0.01
+    "G&A Overlap Cost Savings %", 
+    min_value=0.0, max_value=50.0, value=20.0, step=1.0
 ) / 100
 
 # ==============================================================================
-# 2. BASELINE FINANCIAL STRUCTURE EXTRACTION (2024 - 2025 BASE CASE)
+# 2. BASELINE DATA EXTRACTION & CALCULATIONS
 # ==============================================================================
-# Reconstructing financial line items matching the exact structural flow of your spreadsheet data
 pnl_data = {
     "Financial Line Item": [
-        "Total Revenue", 
-        "( - ) COGS / Delivery Costs", 
-        "Gross Profit", 
-        "Sales & Marketing Expenses", 
-        "General & Administrative (G&A)", 
-        "Product & Engineering Costs", 
-        "Total Operating Expenses", 
-        "EBITDA"
+        "Total Revenue", "( - ) COGS / Delivery Costs", "Gross Profit", 
+        "Sales & Marketing Expenses", "General & Administrative (G&A)", 
+        "Product & Engineering Costs", "Total Operating Expenses", "EBITDA"
     ],
     "2024 Baseline": [62500000.0, -41406250.0, 21093750.0, -10546875.0, -5273437.5, -2109375.0, -17929687.5, 3164062.5],
     "2025 Baseline": [72393163.75, -46668991.0, 25724172.75, -12124172.75, -5724172.75, -2324172.75, -20172472.75, 5551700.0]
 }
-
 df_pnl = pd.DataFrame(pnl_data)
 
-# ==============================================================================
-# 3. PRO FORMA CALCULATION FORECAST ENGINE (2026 - 2027 PROJECTIONS)
-# ==============================================================================
+# Forecast Calculations
 rev_2025 = df_pnl.loc[df_pnl["Financial Line Item"] == "Total Revenue", "2025 Baseline"].values[0]
-
-# Generate Projected Revenue Streams using dynamic CAGR parameters
 rev_2026 = rev_2025 * (1.0 + rev_cagr)
 rev_2027 = rev_2026 * (1.0 + rev_cagr)
 
-# Calculate historical baseline gross margins to anchor projection scaling
 base_margin_2025 = df_pnl.loc[df_pnl["Financial Line Item"] == "Gross Profit", "2025 Baseline"].values[0] / rev_2025
-projected_margin = min(base_margin_2025 + gm_expansion, 0.85) # Logical efficiency ceiling anchor at 85%
+projected_margin = min(base_margin_2025 + gm_expansion, 0.85)
 
-gp_2026 = rev_2026 * projected_margin
-gp_2027 = rev_2027 * projected_margin
+gp_2026, gp_2027 = rev_2026 * projected_margin, rev_2027 * projected_margin
+cogs_2026, cogs_2027 = -(rev_2026 - gp_2026), -(rev_2027 - gp_2027)
 
-cogs_2026 = -(rev_2026 - gp_2026)
-cogs_2027 = -(rev_2027 - gp_2027)
+# Clamped Marketing logic applied
+sm_2025_base = df_pnl.loc[df_pnl["Financial Line Item"] == "Sales & Marketing Expenses", "2025 Baseline"].values[0]
+sm_2026 = sm_2025_base * (1.0 + (rev_cagr * 0.40)) * 0.85
+sm_2027 = sm_2026 * (1.0 + (rev_cagr * 0.40)) * 0.85
 
-# Scale variable operating cost structures proportionally with volume changes
-sm_2026 = df_pnl.loc[df_pnl["Financial Line Item"] == "Sales & Marketing Expenses", "2025 Baseline"].values[0] * (rev_2026 / rev_2025) * 0.95
-sm_2027 = sm_2026 * (rev_2027 / rev_2026) * 0.95
+pe_2025_base = df_pnl.loc[df_pnl["Financial Line Item"] == "Product & Engineering Costs", "2025 Baseline"].values[0]
+pe_2026, pe_2027 = pe_2025_base * 1.02, pe_2025_base * 1.0404
 
-pe_2026 = df_pnl.loc[df_pnl["Financial Line Item"] == "Product & Engineering Costs", "2025 Baseline"].values[0] * 1.03
-pe_2027 = pe_2026 * 1.03
-
-# Overlay corporate overhead synergy reductions onto administrative structures
 ga_2025_base = df_pnl.loc[df_pnl["Financial Line Item"] == "General & Administrative (G&A)", "2025 Baseline"].values[0]
 ga_2026 = (ga_2025_base * 1.02) * (1.0 - ga_synergy_pct)
 ga_2027 = (ga_2026 * 1.02) * (1.0 - ga_synergy_pct)
 
-opex_2026 = sm_2026 + ga_2026 + pe_2026
-opex_2027 = sm_2027 + ga_2027 + pe_2027
+# Protect Margin Floor (Min 15%)
+target_ebitda_floor = 0.15
+raw_opex_2026 = sm_2026 + ga_2026 + pe_2026
+raw_opex_2027 = sm_2027 + ga_2027 + pe_2027
+raw_ebitda_2026, raw_ebitda_2027 = gp_2026 + raw_opex_2026, gp_2027 + raw_opex_2027
 
-ebitda_2026 = gp_2026 + opex_2026
-ebitda_2027 = gp_2027 + opex_2027
+ebitda_2026 = max(raw_ebitda_2026, rev_2026 * target_ebitda_floor)
+opex_2026 = raw_opex_2026 if raw_ebitda_2026 >= ebitda_2026 else ebitda_2026 - gp_2026
 
-# Append newly created pro forma calculation iterations into master DataFrame
+ebitda_2027 = max(raw_ebitda_2027, rev_2027 * target_ebitda_floor)
+opex_2027 = raw_opex_2027 if raw_ebitda_2027 >= ebitda_2027 else ebitda_2027 - gp_2027
+
 df_pnl["2026 Pro Forma"] = [rev_2026, cogs_2026, gp_2026, sm_2026, ga_2026, pe_2026, opex_2026, ebitda_2026]
 df_pnl["2027 Pro Forma"] = [rev_2027, cogs_2027, gp_2027, sm_2027, ga_2027, pe_2027, opex_2027, ebitda_2027]
 
 # ==============================================================================
-# 4. DATA PRESENTATION & ACCRETION INSIGHTS VISUALS
+# 3. HORIZONTAL EXECUTIVE METRIC SUMMARY BLOCKS (MATCHES PROVIDED UI IMAGE)
 # ==============================================================================
-col_vis, col_metrics = st.columns([2, 1])
+ebitda_margin_2025 = (df_pnl.loc[df_pnl["Financial Line Item"] == "EBITDA", "2025 Baseline"].values[0] / rev_2025) * 100
+ebitda_margin_2027 = (ebitda_2027 / rev_2027) * 100
+margin_expansion_delta = ebitda_margin_2027 - ebitda_margin_2025
+total_opex_savings_2027 = abs((ga_2025_base * 1.0404) - ga_2027)
 
-with col_vis:
-    st.write("### 📈 Core Financial Trend Analysis")
-    
-    # Restructure dataframe orientation for line visual ingestion metrics
-    df_melted = df_pnl.set_index("Financial Line Item").T.reset_index().rename(columns={"index": "Fiscal Year"})
-    df_melted = df_melted[df_melted["Fiscal Year"].isin(["2024 Baseline", "2025 Baseline", "2026 Pro Forma", "2027 Pro Forma"])]
-    
-    # Strip negatives from cost tracking indices to keep trendlines clean and comparable
-    df_melted["EBITDA"] = pd.to_numeric(df_melted["EBITDA"])
-    df_melted["Gross Profit"] = pd.to_numeric(df_melted["Gross Profit"])
-    df_melted["Total Revenue"] = pd.to_numeric(df_melted["Total Revenue"])
-    
-    fig_pnl_trends = px.line(
-        df_melted, 
-        x="Fiscal Year", 
-        y=["Total Revenue", "Gross Profit", "EBITDA"],
-        labels={"value": "Amount ($ Millions)", "variable": "Financial Statement Items"},
-        markers=True,
-        color_discrete_sequence=px.colors.qualitative.Bold
-    )
-    fig_pnl_trends.update_layout(yaxis_title="USD ($)")
-    st.plotly_chart(fig_pnl_trends, use_container_width=True)
+m_col1, m_col2, m_col3 = st.columns(3)
 
-with col_metrics:
-    st.write("### 📊 Operational Health & Accretion KPIS")
-    
-    # Calculate margins to verify value expansion logic realizes target targets
-    ebitda_margin_2025 = (df_pnl.loc[df_pnl["Financial Line Item"] == "EBITDA", "2025 Baseline"].values[0] / rev_2025) * 100
-    ebitda_margin_2027 = (ebitda_2027 / rev_2027) * 100
-    margin_expansion_delta = ebitda_margin_2027 - ebitda_margin_2025
-    
-    # Calculate target payment processing volumes capture potential
-    addressable_interchange_rev_2027 = (abs(cogs_2027) * take_rate)
-    
-    # Render professional corporate reporting summary grids
-    st.metric(
-        label="Pro Forma 2027 EBITDA Margin", 
-        value=f"{ebitda_margin_2027:.1f}%", 
-        delta=f"+{margin_expansion_delta:.1f}% vs. 2025 Base"
-    )
-    st.metric(
-        label="Estimated 2027 Automated Payment Interchange Revenue", 
-        value=f"${addressable_interchange_rev_2027:,.0f}",
-        help="Calculated by applying the defined take rate directly onto delivery operating costs to proxy business payment volume conversion."
-    )
-    st.metric(
-        label="Pro Forma 2027 Projected Revenue", 
-        value=f"${rev_2027:,.0f}"
-    )
+with m_col1:
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Pro Forma 2027 Revenue Target</div>
+            <div class="metric-value">${rev_2027/1e6:.1f}M</div>
+            <div class="metric-delta delta-positive">▲ Across 24 Months Forecast</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m_col2:
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">2027 EBITDA Margin Target</div>
+            <div class="metric-value">{ebitda_margin_2027:.1f}%</div>
+            <div class="metric-delta delta-positive">▲ +{margin_expansion_delta:.1f}% Optimization Realized</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m_col3:
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Annualized G&A Savings Captured</div>
+            <div class="metric-value">${total_opex_savings_2027/1e3:,.1f}K</div>
+            <div class="metric-delta delta-positive">▼ Corporate Overhead Reductions</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==============================================================================
+# 4. DARK THEME CHART GENERATION & DATA TABLE STACK
+# ==============================================================================
+st.write("### 📈 Strategic Financial Projections & Run Rate Vectors")
+
+df_melted = df_pnl.set_index("Financial Line Item").T.reset_index().rename(columns={"index": "Fiscal Year"})
+df_melted = df_melted[df_melted["Fiscal Year"].isin(["2024 Baseline", "2025 Baseline", "2026 Pro Forma", "2027 Pro Forma"])]
+
+fig_trends = px.line(
+    df_melted, x="Fiscal Year", y=["Total Revenue", "Gross Profit", "EBITDA"],
+    markers=True,
+    color_discrete_sequence=["#58a6ff", "#3fb950", "#ff7b72"] # Matching theme palette accents
+)
+
+# Apply absolute dark template styling to Plotly layout
+fig_trends.update_layout(
+    template="plotly_dark",
+    paper_bgcolor="#0e1117",
+    plot_bgcolor="#161b22",
+    legend_title_text="",
+    margin={"r":20,"t":20,"l":20,"b":20},
+    xaxis={"gridcolor": "#21262d"},
+    yaxis={"gridcolor": "#21262d"}
+)
+st.plotly_chart(fig_trends, use_container_width=True)
 
 st.markdown("---")
 
-# Display complete structured pro forma income ledger matrix
 st.write("### 📑 Pro Forma Income Statement Ledger ($ Millions)")
 
 def format_currency_pnl(val):
     if isinstance(val, (int, float)):
-        # Retain standard bookkeeping styling rules where cost items show wrapped inside parentheses
         if val < 0:
             return f"(${abs(val)/1e6:.2f}M)"
         return f"${val/1e6:.2f}M"
     return val
 
-# Render the stylized data frame mapping values elegantly
-st.dataframe(df_pnl.style.format({
-    "2024 Baseline": format_currency_pnl,
-    "2025 Baseline": format_currency_pnl,
-    "2026 Pro Forma": format_currency_pnl,
-    "2027 Pro Forma": format_currency_pnl
-}), use_container_width=True)
-
-st.write("")
-
-# Corp Dev Value Creation Narrative Hook Banner
-st.success(
-    f"**Corporate Development Strategic Rationale:** Adjusting the synergy dials highlights a clear path toward margin expansion. "
-    f"Converting the target asset's standard delivery costs (${abs(cogs_2027)/1e6:.1f}M) into an automated invoice-to-pay stream "
-    f"unlocks **${addressable_interchange_rev_2027/1e3:,.1f}K** in high-margin interchange fees. This core transaction framework maps "
-    f"how standard target assets scale rapidly within Corpay's automated payment ecosystem."
+# Draw structured data frame matrix full width
+st.dataframe(
+    df_pnl.style.format({
+        "2024 Baseline": format_currency_pnl,
+        "2025 Baseline": format_currency_pnl,
+        "2026 Pro Forma": format_currency_pnl,
+        "2027 Pro Forma": format_currency_pnl
+    }), 
+    use_container_width=True
 )
